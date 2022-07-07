@@ -1,5 +1,5 @@
 import { isPlatformServer } from '@angular/common'
-import QuillType from 'quill'
+import QuillType from 'quill-zuckjet'
 import { QuillModules } from './quill-editor.interfaces'
 
 import {

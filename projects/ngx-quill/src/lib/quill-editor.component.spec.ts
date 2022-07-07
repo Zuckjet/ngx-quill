@@ -6,7 +6,7 @@ import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms'
 
 import {QuillEditorComponent} from './quill-editor.component'
 
-import Quill from 'quill'
+import Quill from 'quill-zuckjet'
 import {QuillModule} from './quill.module'
 
 window.setTimeout = ((cb) => {
@@ -16,7 +16,7 @@ window.setTimeout = ((cb) => {
 
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const QuillNamespace = require('quill')
+const QuillNamespace = require('quill-zuckjet')
 
 class CustomModule {
   quill: Quill

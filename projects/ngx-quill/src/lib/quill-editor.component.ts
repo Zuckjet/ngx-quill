@@ -3,7 +3,8 @@ import { DomSanitizer } from '@angular/platform-browser'
 
 import { QuillModules, CustomOption, CustomModule } from './quill-editor.interfaces'
 
-import QuillType, { Delta } from 'quill'
+import QuillType from 'quill-zuckjet'
+import Delta from 'quill-delta';
 
 import {
   AfterViewInit,
@@ -632,7 +633,7 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
     // trim text if wanted + handle special case that an empty editor contains a new line
     const textLength = this.trimOnValidation ? text.trim().length : (text.length === 1 && text.trim().length === 0 ? 0 : text.length - 1)
     const deltaOperations = this.quillEditor.getContents().ops
-    const onlyEmptyOperation = deltaOperations && deltaOperations.length === 1 && ['\n', ''].includes(deltaOperations[0].insert)
+    const onlyEmptyOperation = deltaOperations && deltaOperations.length === 1 && (['\n', ''] as any).includes(deltaOperations[0].insert)
 
     if (this.minLength && textLength && textLength < this.minLength) {
       err.minLengthError = {

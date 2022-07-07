@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { QuillViewComponent } from './quill-view.component'
 
 import { QuillModule } from './quill.module'
-import Quill from 'quill'
+import Quill from 'quill-zuckjet'
 
 /* eslint-disable max-classes-per-file */
 
