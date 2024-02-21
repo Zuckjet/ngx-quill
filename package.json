@@ -12,14 +12,14 @@
   },
   "license": "MIT",
   "author": {
-    "name": "Bengt Weiße"
+    "name": "Zuckjet"
   },
   "description": "An angular component for the easy use of the QuillJS richt text editor.",
-  "bugs": "https://github.com/KillerCodeMonkey/ngx-quill/issues",
-  "homepage": "https://github.com/KillerCodeMonkey/ngx-quill",
+  "bugs": "https://github.com/Zuckjet/ngx-quill/issues",
+  "homepage": "https://github.com/Zuckjet/ngx-quill",
   "repository": {
     "type": "git",
-    "url": "https://github.com/KillerCodeMonkey/ngx-quill"
+    "url": "https://github.com/Zuckjet/ngx-quill"
   },
   "engines": {
     "node": ">= 18.3.1",
