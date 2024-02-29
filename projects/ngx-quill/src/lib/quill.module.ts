@@ -13,7 +13,7 @@ import { QuillViewComponent } from './quill-view.component'
     QuillViewHTMLComponent
   ],
   exports: [QuillEditorComponent, QuillViewComponent, QuillViewHTMLComponent],
-  imports: [CommonModule, QuillEditorComponent, QuillViewComponent, QuillViewHTMLComponent]
+  imports: [CommonModule]
 })
 export class QuillModule {
   static forRoot(config?: QuillConfig): ModuleWithProviders<QuillModule> {
