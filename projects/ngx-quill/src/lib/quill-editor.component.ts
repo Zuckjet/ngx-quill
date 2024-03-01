@@ -2,7 +2,7 @@
 import { DOCUMENT, isPlatformServer, CommonModule } from '@angular/common'
 import { DomSanitizer } from '@angular/platform-browser'
 
-import QuillType from 'quill'
+import QuillType from 'quill-zuckjet'
 import Delta from 'quill-delta'
 
 import {
