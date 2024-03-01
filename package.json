@@ -1,5 +1,5 @@
 {
-  "name": "ngx-quill",
+  "name": "ngx-quill-zuckjet",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -13,7 +13,7 @@
   },
   "license": "MIT",
   "author": {
-    "name": "Bengt Weiße"
+    "name": "Zuckjet"
   },
   "description": "An angular component for the easy use of the QuillJS richt text editor.",
   "bugs": "https://github.com/KillerCodeMonkey/ngx-quill/issues",
@@ -23,7 +23,8 @@
     "url": "https://github.com/KillerCodeMonkey/ngx-quill"
   },
   "engines": {
-    "node": "18"
+    "node": ">= 18",
+    "npm": ">=7"
   },
   "keywords": [
     "editor",
@@ -48,6 +49,8 @@
     "@angular/platform-browser": "^17.2.2",
     "@angular/platform-browser-dynamic": "^17.2.2",
     "@angular/router": "^17.2.2",
+    "quill-delta": "^5.0.0",
+    "quill-zuckjet": "^2.0.0-dev.500",
     "quill": "2.0.0-rc.2",
     "rxjs": "^7.8.1",
     "tslib": "^2.6.2",

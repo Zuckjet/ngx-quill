@@ -19,8 +19,8 @@
       "dom"
     ],
     "paths": {
-      "ngx-quill/config": ["projects/ngx-quill/config/src/public_api.ts"],
-      "ngx-quill": ["projects/ngx-quill/src/public_api.ts"]
+      "ngx-quill-zuckjet/config": ["projects/ngx-quill/config/src/public_api.ts"],
+      "ngx-quill-zuckjet": ["projects/ngx-quill/src/public_api.ts"]
     }
   },
   "angularCompilerOptions": {

@@ -2,7 +2,7 @@
 import { DOCUMENT, isPlatformServer, CommonModule } from '@angular/common'
 import { DomSanitizer } from '@angular/platform-browser'
 
-import QuillType from 'quill'
+import QuillType from 'quill-zuckjet'
 import Delta from 'quill-delta'
 
 import {
@@ -31,7 +31,7 @@ import { debounceTime, mergeMap } from 'rxjs/operators'
 
 import { ControlValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, Validator } from '@angular/forms'
 
-import { defaultModules, QuillModules, CustomOption, CustomModule } from 'ngx-quill/config'
+import { defaultModules, QuillModules, CustomOption, CustomModule } from 'ngx-quill-zuckjet/config'
 
 import { getFormat } from './helpers'
 import { QuillService } from './quill.service'
