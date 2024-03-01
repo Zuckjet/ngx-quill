@@ -23,7 +23,7 @@ import {
 import { Subscription } from 'rxjs'
 import { mergeMap } from 'rxjs/operators'
 
-import { CustomOption, CustomModule, QuillModules } from 'ngx-quill/config'
+import { CustomOption, CustomModule, QuillModules } from 'ngx-quill-zuckjet/config'
 
 import {getFormat} from './helpers'
 import { QuillService } from './quill.service'

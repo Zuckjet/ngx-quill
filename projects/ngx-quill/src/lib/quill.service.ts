@@ -9,7 +9,7 @@ import {
   QUILL_CONFIG_TOKEN,
   QuillConfig,
   CustomModule,
-} from 'ngx-quill/config'
+} from 'ngx-quill-zuckjet/config'
 
 @Injectable({
   providedIn: 'root',

@@ -17,7 +17,7 @@ window.setTimeout = ((cb) => {
 
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const QuillNamespace = require('quill-zuckjet')
+// const QuillNamespace = require('quill-zuckjet')
 
 class CustomModule {
   quill: Quill
