@@ -1,6 +1,6 @@
-import { isPlatformServer } from '@angular/common'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule, isPlatformServer } from '@angular/common'
 import QuillType from 'quill-zuckjet'
-import { QuillModules } from './quill-editor.interfaces'
 
 import {
   AfterViewInit,
@@ -23,7 +23,8 @@ import {
 import { Subscription } from 'rxjs'
 import { mergeMap } from 'rxjs/operators'
 
-import { CustomOption, CustomModule } from './quill-editor.interfaces'
+import { CustomOption, CustomModule, QuillModules } from 'ngx-quill/config'
+
 import {getFormat} from './helpers'
 import { QuillService } from './quill.service'
 import { DomSanitizer } from '@angular/platform-browser'
@@ -37,9 +38,14 @@ import { DomSanitizer } from '@angular/platform-browser'
 }
 `],
   template: `
-<div quill-view-element *ngIf="!preserve"></div>
-<pre quill-view-element *ngIf="preserve"></pre>
-`
+@if (preserve) {
+  <pre quill-view-element></pre>
+} @else {
+  <div quill-view-element></div>
+}
+`,
+  standalone: true,
+  imports: [CommonModule]
 })
 export class QuillViewComponent implements AfterViewInit, OnChanges, OnDestroy, OnInit {
   @Input() format?: 'object' | 'html' | 'text' | 'json'
@@ -48,6 +54,7 @@ export class QuillViewComponent implements AfterViewInit, OnChanges, OnDestroy, 
   @Input() debug?: 'warn' | 'log' | 'error' | false
   @Input() formats?: string[] | null
   @Input() sanitize?: boolean
+  @Input() beforeRender?: () => Promise<void>
   @Input() strict = true
   @Input() content: any
   @Input() customModules: CustomModule[] = []
@@ -82,7 +89,7 @@ export class QuillViewComponent implements AfterViewInit, OnChanges, OnDestroy, 
         if (sanitize) {
           value = this.domSanitizer.sanitize(SecurityContext.HTML, value)
         }
-        content = quillEditor.clipboard.convert(value)
+        content = quillEditor.clipboard.convert({html: value})
       } else if (format === 'json') {
         try {
           content = JSON.parse(value)
@@ -113,7 +120,14 @@ export class QuillViewComponent implements AfterViewInit, OnChanges, OnDestroy, 
     }
 
     this.quillSubscription = this.service.getQuill().pipe(
-      mergeMap((Quill) => this.service.registerCustomModules(Quill, this.customModules))
+      mergeMap((Quill) => {
+        const promises = [this.service.registerCustomModules(Quill, this.customModules)]
+        const beforeRender = this.beforeRender ?? this.service.config.beforeRender
+        if (beforeRender) {
+          promises.push(beforeRender())
+        }
+        return Promise.all(promises).then(() => Quill)
+      })
     ).subscribe(Quill => {
       const modules = Object.assign({}, this.modules || this.service.config.modules)
       modules.toolbar = false
@@ -168,6 +182,7 @@ export class QuillViewComponent implements AfterViewInit, OnChanges, OnDestroy, 
       // to prevent the frame drop and avoid `ExpressionChangedAfterItHasBeenCheckedError` error.
       requestAnimationFrame(() => {
         this.onEditorCreated.emit(this.quillEditor)
+        this.onEditorCreated.complete()
       })
     })
   }

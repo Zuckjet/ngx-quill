@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { InjectionToken } from '@angular/core'
 
 import { defaultModules } from './quill-defaults'
@@ -52,7 +53,8 @@ export interface QuillModules {
   keyboard?: {
     bindings?: any
   } | boolean
-  syntax?: boolean
+  syntax?: boolean | { hljs: any }
+  table?: boolean | Record<string, unknown>
   toolbar?: QuillToolbarConfig | string | {
     container?: string | string[] | QuillToolbarConfig
     handlers?: {
@@ -74,14 +76,18 @@ export interface QuillConfig {
   modules?: QuillModules
   placeholder?: string
   readOnly?: boolean
-  scrollingContainer?: HTMLElement | string | null
+  registry?: Record<string, unknown> // added in quill2 result of const registry = new Parchment.Registry(); 
+  // scrollingContainer?: HTMLElement | string | null -->  removed in quill2
   theme?: string
-  strict?: boolean
+  // strict?: boolean --> removed in quill2
   // Custom Config to track all changes or only changes by 'user'
   trackChanges?: 'user' | 'all'
   // provide default empty value
   defaultEmptyValue?: any
   sanitize?: boolean
+  // A function, which is executed before the Quill editor is rendered, this might be useful
+  // for lazy-loading CSS.
+  beforeRender?: () => Promise<void>
 }
 
 export const QUILL_CONFIG_TOKEN = new InjectionToken<QuillConfig>('config', {

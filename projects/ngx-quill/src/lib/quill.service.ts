@@ -1,10 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DOCUMENT } from '@angular/common'
 import { Injectable, Inject, Injector, Optional } from '@angular/core'
 import { defer, firstValueFrom, isObservable, Observable } from 'rxjs'
 import { shareReplay } from 'rxjs/operators'
 
-import { defaultModules } from './quill-defaults'
-import { QUILL_CONFIG_TOKEN, QuillConfig, CustomModule } from './quill-editor.interfaces'
+import {
+  defaultModules,
+  QUILL_CONFIG_TOKEN,
+  QuillConfig,
+  CustomModule,
+} from 'ngx-quill/config'
 
 @Injectable({
   providedIn: 'root',
@@ -28,13 +33,16 @@ export class QuillService {
       // this means the `zone.js` is not imported.
       // The `__zone_symbol__addEventListener` is basically a native DOM API, which is not patched by zone.js, thus not even going
       // through the `zone.js` task lifecycle. You can also access the native DOM API as follows `target[Zone.__symbol__('methodName')]`.
-      // eslint-disable-next-line @typescript-eslint/dot-notation
-      this.document.addEventListener = this.document['__zone_symbol__addEventListener'] || this.document.addEventListener
+      this.document.addEventListener =
+        // eslint-disable-next-line @typescript-eslint/dot-notation
+        this.document['__zone_symbol__addEventListener'] ||
+        this.document.addEventListener
       const quillImport = await import('quill')
       this.document.addEventListener = maybePatchedAddEventListener
 
       this.Quill = (
-        quillImport.default ? quillImport.default : quillImport
+        // seems like esmodules have nested "default"
+        (quillImport.default as any)?.default ?? quillImport.default ?? quillImport
       ) as any
     }
 
@@ -77,7 +85,7 @@ export class QuillService {
    *
    * @internal
    */
-   async registerCustomModules(
+  async registerCustomModules(
     Quill: any,
     customModules: CustomModule[] | undefined,
     suppressGlobalRegisterWarning?: boolean

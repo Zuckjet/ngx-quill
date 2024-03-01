@@ -9,21 +9,9 @@ If you like my work, feel free to support it. Donations to the project are alway
 
 PayPal: [PayPal.Me/bengtler](http://paypal.me/bengtler)
 
-BTC Wallet Address:
-`3QVyr2tpRLBCw1kBQ59sTDraV6DTswq8Li`
-
-ETH Wallet Address:
-`0x394d44f3b6e3a4f7b4d44991e7654b0cab4af68f`
-
-LTC Wallet Address:
-`MFif769WSZ1g7ReAzzDE7TJVqtkFpmoTyT`
-
 ## Examples
 
 - [Advanced Demo](https://github.com/killerCodeMonkey/ngx-quill-example)
-  - integration of [quill-emoji](https://github.com/contentco/quill-emoji)
-  - integration of [quill-mention](https://github.com/afconsult/quill-mention)
-  - integration of [quill-image-resize](https://github.com/kensnyder/quill-image-resize-module)
   - custom word count module
   - custom toolbar with custom fonts and formats, toolbar position
   - show the differences between sanitizing and not sanitizing your content if your content format is html
@@ -53,35 +41,35 @@ LTC Wallet Address:
   <tbody>
     <tr>
       <td>
-        v14
+        v17
       </td>
       <td>
-        >= 17.0.0
+        >= 25.0.0 (quill v2)
       </td>
       <td>
-        until Dec 02, 2023
-      </td>
-    </tr>
-    <tr>
-      <td>
-        v13
-      </td>
-      <td>
-        >= 15.0.0, < 17.0.0
-      </td>
-      <td>
-        until May 04, 2023
+        until May, 2025
       </td>
     </tr>
     <tr>
       <td>
-        v12
+        v17
       </td>
       <td>
-        >= 14.0.0, < 16.0.0
+        24.x (quill v1)
       </td>
       <td>
-        until Nov 12, 2022
+        until May, 2025
+      </td>
+    </tr>
+    <tr>
+      <td>
+        v16
+      </td>
+      <td>
+        23.x (quill v1)
+      </td>
+      <td>
+        until Nov, 2024
       </td>
     </tr>
   </tbody>
@@ -90,15 +78,15 @@ LTC Wallet Address:
 ## Installation
 
 - `npm install ngx-quill`
-- for projects using Angular < v5.0.0 install `npm install ngx-quill@1.6.0`
-- install `@angular/core`, `@angular/common`, `@angular/forms`, `@angular/platform-browser`, `quill` v1.x, `@types/quill` v1.x  and `rxjs` - peer dependencies of ngx-quill
+- install `@angular/core`, `@angular/common`, `@angular/forms`, `@angular/platform-browser`, `quill` exact version `2.0.0-rc.0` and `rxjs` - peer dependencies of ngx-quill
 - include theme styling: 	**bubble.css or snow.css of quilljs** in your index.html (you can find them in `node_modules/quill/dist`), or add them in your css/scss files  with `@import` statements, or add them external stylings in your build process.
-  - Example at the beginning of your style.(s)css:
-   ```TS
-    @import '~quill/dist/quill.bubble.css'; 
-    // or
-    @import '~quill/dist/quill.snow.css';
-   ```
+- Example at the beginning of your style.(s)css:
+
+```TS
+@import '~quill/dist/quill.bubble.css';
+// or
+@import '~quill/dist/quill.snow.css';
+```
 
 ### For standard webpack, angular-cli and tsc builds
 
@@ -108,6 +96,7 @@ import { QuillModule } from 'ngx-quill'
 ```
 - add `QuillModule` to the imports of your NgModule:
 ```TS
+
 @NgModule({
   imports: [
     ...,
@@ -132,14 +121,16 @@ Nothing to do here :)
 
 ## Global Config
 
-It is possible to set custom default modules and Quill config options with the import of the `QuillModule.forRoot()`.
+It's possible to set custom default modules and Quill config options with the import of the `QuillConfigModule` from the `ngx-quill/config`. This module provides a global config, but eliminates the need to import the `ngx-quill` library into the vendor bundle:
 
-```TS
+```ts
+import { QuillConfigModule } from 'ngx-quill/config';
+
 @NgModule({
   imports: [
     ...,
 
-    QuillModule.forRoot({
+    QuillConfigModule.forRoot({
       modules: {
         syntax: true,
         toolbar: [...]
@@ -148,8 +139,24 @@ It is possible to set custom default modules and Quill config options with the i
   ],
   ...
 })
-class YourModule { ... }
+class AppModule {}
+```
 
+Registering the global configuration can be also done using the standalone function if you are bootstrapping an Angular application using standalone features:
+
+```ts
+import { provideQuillConfig } from 'ngx-quill/config';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideQuillConfig({
+      modules: {
+        syntax: true,
+        toolbar: [...]
+      }
+    })
+  ]
+})
 ```
 
 If you want to use the `syntax` module follow the [Syntax Highlight Module Guide](https://quilljs.com/docs/modules/syntax/#syntax-highlighter-module).
@@ -222,16 +229,65 @@ const modules = {
 - minLength - add validation for minlength - set model state to `invalid` and add `ng-invalid` class, only set invalid if editor text not empty --> if you want to check if text is required --> use the required attribute
 - trimOnValidation - trim trailing|leading newlines on validation run for required, min- and maxLength, default `false`
 - required - add validation as a required field - `[required]="true"` - default: false, boolean expected (no strings!)
-- strict - default: true, sets editor in strict mode
-- scrollingContainer - default '.ql-editor', allows to set scrolling container
-- use customOptions for adding for example custom font sizes --> this overwrites this options **globally** !!!
-- use customModules for adding and overwriting modules --> this overwrites this modules **globally** !!!
-- possibility to create a custom toolbar via projection slot `[quill-editor-toolbar]`:
+- registry - custom parchment registry to not change things globally
+- beforeRender - a function, which is executed before the Quill editor is rendered, this might be useful for lazy-loading CSS. Given the following example:
+
+```ts
+// typings.d.ts
+declare module '!!raw-loader!*.css' {
+  const css: string;
+  export default css;
+}
+
+// my.component.ts
+const quillCSS$ = defer(() =>
+  import('!!raw-loader!quill/dist/quill.core.css').then((m) => {
+    const style = document.createElement('style');
+    style.innerHTML = m.default;
+    document.head.appendChild(style);
+  })
+).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+
+@Component({
+  template: '<quill-editor [beforeRender]="beforeRender"></quill-editor>',
+})
+export class MyComponent {
+  beforeRender = () => firstValueFrom(quillCSS$);
+}
+```
+- use customOptions for adding for example custom font sizes - array of objects `{ import: string; whitelist: any[] }` --> this overwrites this options **globally** !!!
+```TS
+// Example with registering custom fonts
+customOptions: [{
+  import: 'formats/font',
+  whitelist: ['mirza', 'roboto', 'aref', 'serif', 'sansserif', 'monospace']
+}]
+```
+- use customModules for adding and overwriting modules - an array of objects `{ implementation: any; path: string }` --> this overwrites this modules **globally** !!!
+```TS
+// The `implementation` may be a custom module constructor or an Observable that resolves to
+// a custom module constructor (in case you'd want to load your custom module lazily).
+// For instance, these options are applicable:
+// import BlotFormatter from 'quill-blot-formatter';
+customModules = [
+  { path: 'modules/blotFormatter', implementation: BlotFormatter }
+]
+// Or:
+const BlotFormatter$ = defer(() => import('quill-blot-formatter').then(m => m.default))
+customModules = [
+  { path: 'modules/blotFormatter', implementation: BlotFormatter$ }
+]
+```
+- checkout the demo repo about usage of `customOptions` and `customModules` [Demo Repo](https://github.com/KillerCodeMonkey/ngx-quill-example/blob/2e72dc75e6d9b423f67b57b17cc8fb527dd694e4/src/app/app.module.ts#L67)
+- possibility to create a custom toolbar via projection slot `[quill-editor-toolbar]` and add content above `[above-quill-editor-toolbar]` and below `[below-quill-editor-toolbar]` the toolbar:
 
 **Try to not use much angular magic here, like `(output)` listeners. Use native EventListeners**
 
 ```HTML
 <quill-editor>
+  <div above-quill-editor-toolbar>
+    above
+  </div>
   <div quill-editor-toolbar>
     <span class="ql-formats">
       <button class="ql-bold" [title]="'Bold'"></button>
@@ -251,11 +307,15 @@ const modules = {
       </select>
     </span>
   </div>
+  <div below-quill-editor-toolbar>
+    below
+  </div>
 </quill-editor>
 ```
+
 - customToolbarPosition - if you are working with a custom toolbar you can switch the position :). - default: `top`, possible values `top`, `bottom`
 - debug - set log level `warn`, `error`, `log` or `false` to deactivate logging, default: `warn`
-- trackChanges - check if only `user` (quill source user) or `all` change should be trigger model update, default `user`. Using `all` is not recommended, it cause some unexpected sideeffects.
+- trackChanges - check if only `user` (quill source user) or `all` content/selection changes should be trigger model update, default `user`. Using `all` is not recommended, it cause some unexpected sideeffects.
 - preserveWhitespace - default: false - possibility to use a pre-tag instead of a div-tag for the contenteditable area to preserve duplicated whitespaces | caution if used with syntax plugin [Related issue](https://github.com/quilljs/quill/issues/1751)
 - classes - a space separated list of CSS classes that will be added onto the editor element
 - linkPlaceholder - optional - set placeholder for the link tooltip
@@ -330,6 +390,21 @@ or
 {
   editor: editorInstance, // Quill
   source: source // ('user', 'api', 'silent' , undefined)
+}
+```
+
+- onNativeFocus - editor is focused, based on native focus event
+```TS
+{
+  editor: editorInstance, // Quill
+  source: source // ('dom')
+}
+```
+- onNativeBlur - editor is blured, based on native blur event
+```TS
+{
+  editor: editorInstance, // Quill
+  source: source // ('dom')
 }
 ```
 

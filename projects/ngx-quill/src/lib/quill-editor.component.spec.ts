@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {Component, Renderer2, ViewChild} from '@angular/core'
 import {ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/testing'
 import {defer} from 'rxjs'
@@ -29,10 +30,13 @@ class CustomModule {
 }
 
 @Component({
+  selector: 'quill-test',
   template: `
 <quill-editor
   (onBlur)="blured = true"
   (onFocus)="focused = true"
+  (onNativeBlur)="bluredNative = true"
+  (onNativeFocus)="focusedNative = true"
   [(ngModel)]="title"
   [customOptions]="[{import: 'attributors/style/size', whitelist: ['14']}]"
   [styles]="style"
@@ -56,6 +60,8 @@ class TestComponent {
   minLength = 0
   focused = false
   blured = false
+  focusedNative = false
+  bluredNative = false
   maxLength = 0
   style: {
     backgroundColor?: string
@@ -87,6 +93,7 @@ class TestComponent {
 }
 
 @Component({
+  selector: 'quill-toolbar-test',
   template: `
 <quill-editor
   [customToolbarPosition]="toolbarPosition"
@@ -116,6 +123,12 @@ class TestComponent {
       </select>
     </span>
   </div>
+  <div above-quill-editor-toolbar="true">
+    <span>above</span>
+  </div>
+  <div below-quill-editor-toolbar="true">
+    <span>below</span>
+  </div>
 </quill-editor>
 `
 })
@@ -126,11 +139,12 @@ class TestToolbarComponent {
   maxLength = 0
   toolbarPosition = 'top'
 
-  handleEditorCreated() {}
-  handleChange() {}
+  handleEditorCreated() {return}
+  handleChange() {return}
 }
 
 @Component({
+  selector: 'quill-reactive-test',
   template: `
     <quill-editor [formControl]='formControl' [minLength]='minLength'></quill-editor>
 `
@@ -142,6 +156,7 @@ class ReactiveFormTestComponent {
 }
 
 @Component({
+  selector: 'quill-preserve-test',
   template: `
     <quill-editor [ngModel]="content" [preserveWhitespace]="true"></quill-editor>
 `
@@ -152,6 +167,7 @@ class PreserveWhitespaceTestComponent {
 }
 
 @Component({
+  selector: 'quill-module-test',
   template: `
     <quill-editor [modules]="{custom: true}" [customModules]="[{path: 'modules/custom', implementation: impl}]"></quill-editor>
 `
@@ -162,6 +178,7 @@ class CustomModuleTestComponent {
 }
 
 @Component({
+  selector: 'quill-async-module-test',
   template: `
     <quill-editor [modules]="{custom: true}" [customModules]="customModules"></quill-editor>
 `
@@ -177,6 +194,7 @@ class CustomAsynchronousModuleTestComponent {
 }
 
 @Component({
+  selector: 'quill-link-placeholder-test',
   template: `
     <quill-editor [ngModel]="content" [linkPlaceholder]="'https://test.de'"></quill-editor>
 `
@@ -210,7 +228,7 @@ describe('Basic QuillEditorComponent', () => {
     expect(spy).toHaveBeenCalledTimes(3)
     const quillEditor: any = fixture.componentInstance.quillEditor
     /* eslint-disable no-underscore-dangle */
-    expect(quillEditor.emitter._events['editor-change']).toHaveSize(5)
+    expect(quillEditor.emitter._events['editor-change'].length).toBe(4)
     expect(quillEditor.emitter._events['selection-change']).toBeInstanceOf(Object)
     expect(quillEditor.emitter._events['text-change']).toBeFalsy()
     /* eslint-enable no-underscore-dangle */
@@ -441,6 +459,7 @@ describe('Formats', () => {
 
   describe('json', () => {
     @Component({
+      selector: 'json-valid',
       template: `
     <quill-editor [(ngModel)]="title" format="json" (onEditorCreated)="handleEditorCreated($event)"></quill-editor>
     `
@@ -457,6 +476,7 @@ describe('Formats', () => {
     }
 
     @Component({
+      selector: 'quill-json-invalid',
       template: `
     <quill-editor [(ngModel)]="title" format="json" (onEditorCreated)="handleEditorCreated($event)"></quill-editor>
     `
@@ -742,8 +762,8 @@ describe('Advanced QuillEditorComponent', () => {
 
     fixture = TestBed.createComponent(TestComponent) as ComponentFixture<TestComponent>
 
-    spyOn(QuillNamespace, 'import').and.callThrough()
-    spyOn(QuillNamespace, 'register').and.callThrough()
+    spyOn(Quill, 'import').and.callThrough()
+    spyOn(Quill, 'register').and.callThrough()
   })
 
   it('should set editor settings', async () => {
@@ -757,8 +777,8 @@ describe('Advanced QuillEditorComponent', () => {
 
     fixture.componentInstance.isReadOnly = true
 
-    expect(QuillNamespace.import).toHaveBeenCalledWith('attributors/style/size')
-    expect(QuillNamespace.register).toHaveBeenCalled()
+    expect(Quill.import).toHaveBeenCalledWith('attributors/style/size')
+    expect(Quill.register).toHaveBeenCalled()
 
     fixture.detectChanges()
     await fixture.whenStable()
@@ -823,6 +843,15 @@ describe('Advanced QuillEditorComponent', () => {
     fixture.detectChanges()
     await fixture.whenStable()
 
+    expect(editorFixture.nativeElement.className).toMatch('ng-untouched')
+
+    editorFixture.componentInstance.quillEditor.setSelection(0, 5, 'user')
+    fixture.detectChanges()
+    await fixture.whenStable()
+    editorFixture.componentInstance.quillEditor.setSelection(null, 'user')
+    fixture.detectChanges()
+    await fixture.whenStable()
+
     expect(editorFixture.nativeElement.className).toMatch('ng-touched')
   })
 
@@ -840,7 +869,7 @@ describe('Advanced QuillEditorComponent', () => {
   })
 
   it('should emit onEditorCreated with editor instance',  async () => {
-    fixture.componentInstance.editorComponent.onValidatorChanged = () => {}
+    fixture.componentInstance.editorComponent.onValidatorChanged = () => { return }
 
     spyOn(fixture.componentInstance, 'handleEditorCreated')
 
@@ -1006,6 +1035,18 @@ describe('Advanced QuillEditorComponent', () => {
     expect(fixture.componentInstance.focused).toBe(true)
   })
 
+  it('should emit onNativeFocus when scroll container receives focus', async () => {
+    fixture.detectChanges()
+    await fixture.whenStable()
+
+    const editorFixture = fixture.debugElement.children[0]
+
+    editorFixture.componentInstance.quillEditor.scroll.domNode.focus()
+    fixture.detectChanges()
+
+    expect(fixture.componentInstance.focusedNative).toBe(true)
+  })
+
   it('should emit onBlur when blured', async () => {
     fixture.detectChanges()
     await fixture.whenStable()
@@ -1017,6 +1058,19 @@ describe('Advanced QuillEditorComponent', () => {
     fixture.detectChanges()
 
     expect(fixture.componentInstance.blured).toBe(true)
+  })
+
+  it('should emit onNativeBlur when scroll container receives blur', async () => {
+    fixture.detectChanges()
+    await fixture.whenStable()
+
+    const editorFixture = fixture.debugElement.children[0]
+
+    editorFixture.componentInstance.quillEditor.scroll.domNode.focus()
+    editorFixture.componentInstance.quillEditor.scroll.domNode.blur()
+    fixture.detectChanges()
+
+    expect(fixture.componentInstance.bluredNative).toBe(true)
   })
 
   it('should validate minlength', async () => {
@@ -1185,8 +1239,10 @@ describe('Advanced QuillEditorComponent', () => {
     toolbarFixture.detectChanges()
     await toolbarFixture.whenStable()
 
-    expect(toolbarFixture.debugElement.children[0].nativeElement.children[1].attributes['quill-editor-element']).toBeDefined()
-    expect(toolbarFixture.debugElement.children[0].nativeElement.children[0].attributes['quill-editor-toolbar']).toBeDefined()
+    expect(toolbarFixture.debugElement.children[0].nativeElement.children[0].attributes['above-quill-editor-toolbar']).toBeDefined()
+    expect(toolbarFixture.debugElement.children[0].nativeElement.children[1].attributes['quill-editor-toolbar']).toBeDefined()
+    expect(toolbarFixture.debugElement.children[0].nativeElement.children[2].attributes['below-quill-editor-toolbar']).toBeDefined()
+    expect(toolbarFixture.debugElement.children[0].nativeElement.children[3].attributes['quill-editor-element']).toBeDefined()
 
     const editorComponent = toolbarFixture.debugElement.children[0].componentInstance
     expect(editorComponent.required).toBe(true)
@@ -1202,7 +1258,9 @@ describe('Advanced QuillEditorComponent', () => {
     await toolbarFixture.whenStable()
 
     expect(toolbarFixture.debugElement.children[0].nativeElement.children[0].attributes['quill-editor-element']).toBeDefined()
-    expect(toolbarFixture.debugElement.children[0].nativeElement.children[1].attributes['quill-editor-toolbar']).toBeDefined()
+    expect(toolbarFixture.debugElement.children[0].nativeElement.children[1].attributes['above-quill-editor-toolbar']).toBeDefined()
+    expect(toolbarFixture.debugElement.children[0].nativeElement.children[2].attributes['quill-editor-toolbar']).toBeDefined()
+    expect(toolbarFixture.debugElement.children[0].nativeElement.children[3].attributes['below-quill-editor-toolbar']).toBeDefined()
 
     const editorComponent = toolbarFixture.debugElement.children[0].componentInstance
     expect(editorComponent.customToolbarPosition).toEqual('bottom')
@@ -1226,8 +1284,8 @@ describe('QuillEditor - base config', () => {
   let importSpy: jasmine.Spy
 
   beforeAll(() => {
-    importSpy = spyOn(QuillNamespace, 'import').and.callThrough()
-    registerSpy = spyOn(QuillNamespace, 'register').and.callThrough()
+    importSpy = spyOn(Quill, 'import').and.callThrough()
+    registerSpy = spyOn(Quill, 'register').and.callThrough()
   })
 
   beforeEach(async () => {
@@ -1256,7 +1314,6 @@ describe('QuillEditor - base config', () => {
         },
         placeholder: 'placeholder',
         readOnly: true,
-        scrollingContainer: null,
         theme: 'snow',
         trackChanges: 'all'
       }).providers
@@ -1287,7 +1344,7 @@ describe('QuillEditor - base config', () => {
     fixture.detectChanges()
 
     expect(JSON.stringify(fixture.componentInstance.title))
-      .toEqual(JSON.stringify({ ops: [{ attributes: { bold: true }, insert: 'content'}, {insert: '\n'}] }))
+      .toEqual(JSON.stringify({ ops: [{ attributes: { italic: true, bold: true }, insert: 'content'}, {insert: '\n'}] }))
     expect(editor.root.dataset.placeholder).toEqual('placeholder')
     expect(registerSpy).toHaveBeenCalledWith(
       jasmine.objectContaining({attrName: 'size', keyName: 'font-size', scope: 5, whitelist: ['14']}), true, true
@@ -1336,7 +1393,7 @@ describe('QuillEditor - customModules', () => {
   })
 
   it('renders editor with config', async () => {
-    const spy = spyOn(QuillNamespace, 'register').and.callThrough()
+    const spy = spyOn(Quill, 'register').and.callThrough()
     fixture = TestBed.createComponent(CustomModuleTestComponent)
     fixture.detectChanges()
     await fixture.whenStable()
@@ -1359,7 +1416,7 @@ describe('QuillEditor - customModules (asynchronous)', () => {
   })
 
   it('renders editor with config', async () => {
-    const spy = spyOn(QuillNamespace, 'register').and.callThrough()
+    const spy = spyOn(Quill, 'register').and.callThrough()
     fixture = TestBed.createComponent(CustomAsynchronousModuleTestComponent)
     fixture.detectChanges()
     await fixture.whenStable()
@@ -1397,5 +1454,57 @@ describe('QuillEditor - defaultEmptyValue', () => {
 
     // eslint-disable-next-line @typescript-eslint/dot-notation
     expect(fixture.componentInstance.editor.defaultEmptyValue).toBeDefined()
+  })
+})
+
+describe('QuillEditor - beforeRender', () => {
+  @Component({
+    template: `
+      <quill-editor [beforeRender]="beforeRender"></quill-editor>
+  `
+  })
+  class BeforeRenderTestComponent {
+    @ViewChild(QuillEditorComponent, { static: true }) editor!: QuillEditorComponent
+
+    beforeRender?: () => Promise<void>
+  }
+
+  let fixture: ComponentFixture<BeforeRenderTestComponent>
+
+  it('should call beforeRender provided on the config level', async () => {
+    const config = { beforeRender: () => Promise.resolve() }
+
+    TestBed.configureTestingModule({
+      declarations: [BeforeRenderTestComponent],
+      imports: [QuillModule.forRoot(config)],
+    })
+
+    spyOn(config, 'beforeRender')
+
+    fixture = TestBed.createComponent(BeforeRenderTestComponent)
+    fixture.detectChanges()
+    await fixture.whenStable()
+
+    expect(config.beforeRender).toHaveBeenCalled()
+  })
+
+  it('should call beforeRender provided on the component level and should not call beforeRender on the config level', async () => {
+    const config = { beforeRender: () => Promise.resolve() }
+
+    TestBed.configureTestingModule({
+      declarations: [BeforeRenderTestComponent],
+      imports: [QuillModule.forRoot(config)],
+    })
+
+    spyOn(config, 'beforeRender')
+
+    fixture = TestBed.createComponent(BeforeRenderTestComponent)
+    fixture.componentInstance.beforeRender = () => Promise.resolve()
+    spyOn(fixture.componentInstance, 'beforeRender')
+    fixture.detectChanges()
+    await fixture.whenStable()
+
+    expect(config.beforeRender).not.toHaveBeenCalled()
+    expect(fixture.componentInstance.beforeRender).toHaveBeenCalled()
   })
 })

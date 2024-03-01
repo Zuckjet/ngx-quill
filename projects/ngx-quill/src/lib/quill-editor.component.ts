@@ -1,10 +1,9 @@
-import { DOCUMENT, isPlatformServer } from '@angular/common'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { DOCUMENT, isPlatformServer, CommonModule } from '@angular/common'
 import { DomSanitizer } from '@angular/platform-browser'
 
-import { QuillModules, CustomOption, CustomModule } from './quill-editor.interfaces'
-
-import QuillType from 'quill-zuckjet'
-import Delta from 'quill-delta';
+import QuillType from 'quill'
+import Delta from 'quill-delta'
 
 import {
   AfterViewInit,
@@ -14,8 +13,7 @@ import {
   ElementRef,
   EventEmitter,
   forwardRef,
-  Inject,
-  Injector,
+  inject,
   Input,
   NgZone,
   OnChanges,
@@ -32,10 +30,13 @@ import { fromEvent, Subscription } from 'rxjs'
 import { debounceTime, mergeMap } from 'rxjs/operators'
 
 import { ControlValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, Validator } from '@angular/forms'
-import { defaultModules } from './quill-defaults'
+
+import { defaultModules, QuillModules, CustomOption, CustomModule } from 'ngx-quill/config'
 
 import { getFormat } from './helpers'
 import { QuillService } from './quill.service'
+import Toolbar from 'quill/modules/toolbar'
+import History from 'quill/modules/history'
 
 export interface Range {
   index: number
@@ -87,9 +88,9 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
   @Input() formats?: string[] | null
   @Input() customToolbarPosition: 'top' | 'bottom' = 'top'
   @Input() sanitize?: boolean
+  @Input() beforeRender?: () => Promise<void>
   @Input() styles: any = null
-  @Input() strict = true
-  @Input() scrollingContainer?: HTMLElement | string | null
+  @Input() registry?: Record<string, unknown> | null
   @Input() bounds?: HTMLElement | string
   @Input() customOptions: CustomOption[] = []
   @Input() customModules: CustomModule[] = []
@@ -122,6 +123,8 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
   @Output() onSelectionChanged: EventEmitter<SelectionChange> = new EventEmitter()
   @Output() onFocus: EventEmitter<Focus> = new EventEmitter()
   @Output() onBlur: EventEmitter<Blur> = new EventEmitter()
+  @Output() onNativeFocus: EventEmitter<Focus> = new EventEmitter()
+  @Output() onNativeBlur: EventEmitter<Blur> = new EventEmitter()
 
   quillEditor!: QuillType
   editorElem!: HTMLElement
@@ -134,22 +137,18 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
   onModelTouched: () => void
   onValidatorChanged: () => void
 
-  private document: Document
   private subscription: Subscription | null = null
   private quillSubscription: Subscription | null = null
 
-  constructor(
-    injector: Injector,
-    public elementRef: ElementRef,
-    protected cd: ChangeDetectorRef,
-    protected domSanitizer: DomSanitizer,
-    @Inject(PLATFORM_ID) protected platformId: any,
-    protected renderer: Renderer2,
-    protected zone: NgZone,
-    protected service: QuillService
-  ) {
-    this.document = injector.get(DOCUMENT)
-  }
+  private elementRef = inject(ElementRef)
+  private document = inject(DOCUMENT)
+
+  private cd = inject(ChangeDetectorRef)
+  private domSanitizer = inject(DomSanitizer)
+  private platformId = inject<string>(PLATFORM_ID)
+  private renderer = inject(Renderer2)
+  private zone = inject(NgZone)
+  private service = inject(QuillService)
 
   static normalizeClassNames(classes: string): string[] {
     const classList = classes.trim().split(' ')
@@ -195,7 +194,7 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
       if (sanitize) {
         value = this.domSanitizer.sanitize(SecurityContext.HTML, value)
       }
-      return quillEditor.clipboard.convert(value)
+      return quillEditor.clipboard.convert({ html: value })
     } else if (format === 'json') {
       try {
         return JSON.parse(value)
@@ -221,7 +220,14 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
     // this will lead to runtime exceptions, since the code will be executed on DOM nodes that don't exist within the tree.
 
     this.quillSubscription = this.service.getQuill().pipe(
-      mergeMap(Quill => this.service.registerCustomModules(Quill, this.customModules))
+      mergeMap((Quill) => {
+        const promises = [this.service.registerCustomModules(Quill, this.customModules)]
+        const beforeRender = this.beforeRender ?? this.service.config.beforeRender
+        if (beforeRender) {
+          promises.push(beforeRender())
+        }
+        return Promise.all(promises).then(() => Quill)
+      })
     ).subscribe(Quill => {
       this.editorElem = this.elementRef.nativeElement.querySelector(
         '[quill-editor-element]'
@@ -275,15 +281,9 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
       }
 
       let defaultEmptyValue = this.defaultEmptyValue
+      // eslint-disable-next-line no-prototype-builtins
       if (this.service.config.hasOwnProperty('defaultEmptyValue')) {
         defaultEmptyValue = this.service.config.defaultEmptyValue
-      }
-
-      let scrollingContainer = this.scrollingContainer
-      if (!scrollingContainer && this.scrollingContainer !== null) {
-        scrollingContainer =
-          this.service.config.scrollingContainer === null
-            || this.service.config.scrollingContainer ? this.service.config.scrollingContainer : null
       }
 
       let formats = this.formats
@@ -300,10 +300,27 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
           placeholder,
           readOnly,
           defaultEmptyValue,
-          scrollingContainer: scrollingContainer as any,
-          strict: this.strict,
+          registry: this.registry,
           theme: this.theme || (this.service.config.theme ? this.service.config.theme : 'snow')
         })
+
+        if (this.onNativeBlur.observed) {
+          // https://github.com/quilljs/quill/issues/2186#issuecomment-533401328
+          this.quillEditor.scroll.domNode.addEventListener('blur', () => this.onNativeBlur.next({
+            editor: this.quillEditor,
+            source: 'dom'
+          }))
+          // https://github.com/quilljs/quill/issues/2186#issuecomment-803257538
+          const toolbar = this.quillEditor.getModule('toolbar') as Toolbar
+          toolbar.container?.addEventListener('mousedown', (e) =>  e.preventDefault())
+        }
+
+        if (this.onNativeFocus.observed) {
+          this.quillEditor.scroll.domNode.addEventListener('focus', () => this.onNativeFocus.next({
+            editor: this.quillEditor,
+            source: 'dom'
+          }))
+        }
 
         // Set optional link placeholder, Quill has no native API for it so using workaround
         if (this.linkPlaceholder) {
@@ -325,7 +342,8 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
           this.quillEditor.setContents(newValue, 'silent')
         }
 
-        this.quillEditor.getModule('history').clear()
+        const history  = this.quillEditor.getModule('history') as History
+        history.clear()
       }
 
       // initialize disabled status based on this.disabled as default value
@@ -347,12 +365,14 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
           this.onValidatorChanged()
         }
         this.onEditorCreated.emit(this.quillEditor)
+        this.onEditorCreated.complete()
       })
     })
   }
 
   selectionChangeHandler = (range: Range | null, oldRange: Range | null, source: string) => {
-    const shouldTriggerOnModelTouched = !range && !!this.onModelTouched
+    const trackChanges = this.trackChanges || this.service.config.trackChanges
+    const shouldTriggerOnModelTouched = !range && !!this.onModelTouched && (source === 'user' || trackChanges && trackChanges === 'all')
 
     // only emit changes when there's any listener
     if (!this.onBlur.observed &&
@@ -633,7 +653,7 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
     // trim text if wanted + handle special case that an empty editor contains a new line
     const textLength = this.trimOnValidation ? text.trim().length : (text.length === 1 && text.trim().length === 0 ? 0 : text.length - 1)
     const deltaOperations = this.quillEditor.getContents().ops
-    const onlyEmptyOperation = deltaOperations && deltaOperations.length === 1 && (['\n', ''] as any).includes(deltaOperations[0].insert)
+    const onlyEmptyOperation = !!deltaOperations && deltaOperations.length === 1 && ['\n', ''].includes(deltaOperations[0].insert?.toString())
 
     if (this.minLength && textLength && textLength < this.minLength) {
       err.minLengthError = {
@@ -717,7 +737,7 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
 }
 
 @Component({
-  encapsulation: ViewEncapsulation.None,
+  encapsulation: ViewEncapsulation.Emulated,
   providers: [
     {
       multi: true,
@@ -734,46 +754,34 @@ export abstract class QuillEditorBase implements AfterViewInit, ControlValueAcce
   ],
   selector: 'quill-editor',
   template: `
-  <ng-container *ngIf="toolbarPosition !== 'top'">
-    <div quill-editor-element *ngIf="!preserve"></div>
-    <pre quill-editor-element *ngIf="preserve"></pre>
-  </ng-container>
-  <ng-content select="[quill-editor-toolbar]"></ng-content>
-  <ng-container *ngIf="toolbarPosition === 'top'">
-    <div quill-editor-element *ngIf="!preserve"></div>
-    <pre quill-editor-element *ngIf="preserve"></pre>
-  </ng-container>
-`,
+    @if (toolbarPosition !== 'top') {
+      @if (preserve) {
+        <pre quill-editor-element></pre>
+      } @else {
+        <div quill-editor-element></div>
+      }
+    }
+
+    <ng-content select="[above-quill-editor-toolbar]"></ng-content>
+    <ng-content select="[quill-editor-toolbar]"></ng-content>
+    <ng-content select="[below-quill-editor-toolbar]"></ng-content>
+
+    @if (toolbarPosition === 'top') {
+      @if (preserve) {
+        <pre quill-editor-element></pre>
+      } @else {
+        <div quill-editor-element></div>
+      }
+    }
+  `,
   styles: [
     `
     :host {
       display: inline-block;
     }
     `
-  ]
+  ],
+  standalone: true,
+  imports: [CommonModule]
 })
-export class QuillEditorComponent extends QuillEditorBase {
-
-  constructor(
-    injector: Injector,
-    @Inject(ElementRef) elementRef: ElementRef,
-    @Inject(ChangeDetectorRef) cd: ChangeDetectorRef,
-    @Inject(DomSanitizer) domSanitizer: DomSanitizer,
-    @Inject(PLATFORM_ID) platformId: any,
-    @Inject(Renderer2) renderer: Renderer2,
-    @Inject(NgZone) zone: NgZone,
-    @Inject(QuillService) service: QuillService
-  ) {
-    super(
-      injector,
-      elementRef,
-      cd,
-      domSanitizer,
-      platformId,
-      renderer,
-      zone,
-      service
-    )
-  }
-
-}
+export class QuillEditorComponent extends QuillEditorBase {}

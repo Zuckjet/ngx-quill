@@ -1,6 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
@@ -10,22 +11,20 @@
     "module": "esnext",
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "ES2022",
+    "skipLibCheck": true,
+    "target": "es2022",
+    "useDefineForClassFields": false,
     "lib": [
       "es2018",
       "dom"
     ],
     "paths": {
-      "ngx-quill": [
-        "dist/ngx-quill/ngx-quill",
-        "dist/ngx-quill"
-      ]
-    },
-    "useDefineForClassFields": false
+      "ngx-quill/config": ["projects/ngx-quill/config/src/public_api.ts"],
+      "ngx-quill": ["projects/ngx-quill/src/public_api.ts"]
+    }
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
-    "strictInjectionParameters": true,
-    "allowSyntheticDefaultImports": true
-  },
+    "strictInjectionParameters": true
+  }
 }
