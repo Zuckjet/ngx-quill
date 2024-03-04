@@ -51,7 +51,7 @@
     "@angular/router": "^17.2.2",
     "quill-delta": "^5.0.0",
     "quill-zuckjet": "^2.0.0-dev.500",
-    "quill": "2.0.0-rc.2",
+    "quill": "git+https://github.com/Zuckjet/quill.git#4262023ad159848857a24054e8436857705505df",
     "rxjs": "^7.8.1",
     "tslib": "^2.6.2",
     "zone.js": "^0.14.4"
@@ -90,6 +90,7 @@
     "karma-mocha-reporter": "^2.2.5",
     "karma-spec-reporter": "0.0.36",
     "ng-packagr": "^17.2.0",
+    "quill": "git+https://github.com/Zuckjet/quill.git#4262023ad159848857a24054e8436857705505df",
     "puppeteer": "^22.3.0",
     "ts-node": "^10.9.2",
     "typescript": "~5.2.2",
