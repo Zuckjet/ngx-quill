@@ -16,6 +16,7 @@ jobs:
           node-version-file: 'package.json'
 
       - name: Intall deps
+        run: npm install
         run: npm ci
 
       - name: Lint
