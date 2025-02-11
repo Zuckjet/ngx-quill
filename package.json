@@ -23,8 +23,7 @@
     "url": "https://github.com/KillerCodeMonkey/ngx-quill"
   },
   "engines": {
-    "node": ">= 18",
-    "npm": ">=7"
+    "node": "^18.19.1 || ^20.11.1 || >=22.0.0"
   },
   "keywords": [
     "editor",
@@ -41,60 +40,61 @@
     "text editor"
   ],
   "dependencies": {
-    "@angular/animations": "^17.2.2",
-    "@angular/common": "^17.2.2",
-    "@angular/compiler": "^17.2.2",
-    "@angular/core": "^17.2.2",
-    "@angular/forms": "^17.2.2",
-    "@angular/platform-browser": "^17.2.2",
-    "@angular/platform-browser-dynamic": "^17.2.2",
-    "@angular/router": "^17.2.2",
+    "@angular/animations": "^18.2.13",
+    "@angular/common": "^18.2.13",
+    "@angular/compiler": "^18.2.13",
+    "@angular/core": "^18.2.13",
+    "@angular/forms": "^18.2.13",
+    "@angular/platform-browser": "^18.2.13",
+    "@angular/platform-browser-dynamic": "^18.2.13",
+    "@angular/router": "^18.2.13",
+    "quill": "git+https://github.com/Zuckjet/quill.git#4262023ad159848857a24054e8436857705505df",
     "quill-delta": "^5.0.0",
     "quill-zuckjet": "^2.0.0-dev.500",
-    "quill": "git+https://github.com/Zuckjet/quill.git#4262023ad159848857a24054e8436857705505df",
     "rxjs": "^7.8.1",
     "tslib": "^2.6.2",
-    "zone.js": "^0.14.4"
+    "zone.js": "^0.14.10"
   },
   "devDependencies": {
-    "@angular-builders/custom-webpack": "^17.0.1",
-    "@angular-devkit/build-angular": "^17.2.1",
-    "@angular-eslint/builder": "^17.2.1",
-    "@angular-eslint/eslint-plugin": "^17.2.1",
-    "@angular-eslint/eslint-plugin-template": "^17.2.1",
-    "@angular-eslint/schematics": "^17.2.1",
-    "@angular-eslint/template-parser": "^17.2.1",
-    "@angular/cli": "^17.2.1",
-    "@angular/compiler-cli": "^17.2.2",
-    "@angular/language-service": "^17.2.2",
-    "@angular/localize": "^17.2.2",
+    "@angular-devkit/build-angular": "^18.2.14",
+    "@angular-eslint/builder": "18.4.3",
+    "@angular-eslint/eslint-plugin": "18.4.3",
+    "@angular-eslint/eslint-plugin-template": "18.4.3",
+    "@angular-eslint/schematics": "18.4.3",
+    "@angular-eslint/template-parser": "18.4.3",
+    "@angular/cli": "^18.2.14",
+    "@angular/compiler-cli": "^18.2.13",
+    "@angular/language-service": "^18.2.13",
+    "@angular/localize": "^18.2.13",
     "@types/jasmine": "^5.1.4",
     "@types/jasminewd2": "^2.0.13",
-    "@types/node": "^18.19.19",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
+    "@types/node": "~20.12.14",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "bufferutil": "^4.0.8",
     "eslint": "^8.57.0",
     "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-jsdoc": "^47.0.2",
+    "eslint-plugin-jsdoc": "^48.11.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
-    "fibers": "^5.0.3",
     "html-webpack-plugin": "^5.6.0",
-    "jasmine-core": "^5.1.2",
+    "jasmine-core": "^5.2.0",
     "jasmine-spec-reporter": "^7.0.0",
-    "karma": "~6.4.3",
+    "karma": "~6.4.4",
     "karma-chrome-launcher": "^3.2.0",
     "karma-coverage": "^2.2.1",
     "karma-jasmine": "^5.1.0",
     "karma-jasmine-html-reporter": "^2.1.0",
     "karma-mocha-reporter": "^2.2.5",
     "karma-spec-reporter": "0.0.36",
-    "ng-packagr": "^17.2.0",
-    "quill": "git+https://github.com/Zuckjet/quill.git#4262023ad159848857a24054e8436857705505df",
-    "puppeteer": "^22.3.0",
-    "ts-node": "^10.9.2",
-    "typescript": "~5.2.2",
-    "utf-8-validate": "^5.0.10"
+    "ng-packagr": "^18.2.1",
+    "puppeteer": "^22.15.0",
+    "typescript": "~5.4.5",
+    "quill": "git+https://github.com/Zuckjet/quill.git#4262023ad159848857a24054e8436857705505df"
+  },
+  "overrides": {
+    "@angular-eslint/schematics": {
+      "@angular/cli": "$@angular/cli"
+    }
   },
   "contributors": [
     {
@@ -103,6 +103,6 @@
   ],
   "version": "0.0.0",
   "volta": {
-    "node": "18.19.0"
+    "node": "20.13.1"
   }
 }

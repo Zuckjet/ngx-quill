@@ -8,22 +8,25 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
+          
+      # 使用 Chrome Action
+      - uses: browser-actions/setup-chrome@latest
 
       - name: Intall deps
-        run: npm ci
+        run: npm install
+        # run: npm ci
 
       - name: Lint
         run: npm run lint
 
       - name: Test
-        run: npm run test -- --watch=false
+        run: npm run test -- --no-watch --no-progress --browsers=ChromeHeadlessCI
 
       - name: Build
         run: npm run build:prod
-
